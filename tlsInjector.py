@@ -59,7 +59,7 @@ class SectionDoubleP:
         FileAlignment = self.pe.OPTIONAL_HEADER.FileAlignment
         SizeOfHeaders = self.pe.OPTIONAL_HEADER.SizeOfHeaders
 
-        data = '\x00' * FileAlignment
+        data = b'\x00' * FileAlignment
 
         # Adding the null buffer.
         self.pe.__data__ = (self.pe.__data__[:SizeOfHeaders] + data +
@@ -76,7 +76,7 @@ class SectionDoubleP:
         self.pe.set_bytes_at_offset(new_section_offset + FileAlignment, data)
 
         # Filling the space, from which the data was copied from, with NULLs.
-        self.pe.set_bytes_at_offset(new_section_offset, '\x00' * FileAlignment)
+        self.pe.set_bytes_at_offset(new_section_offset, b'\x00' * FileAlignment)
 
         data_directory_offset = section_table_offset - self.pe.OPTIONAL_HEADER.NumberOfRvaAndSizes * 0x8
 
@@ -161,12 +161,12 @@ class SectionDoubleP:
 
             if (len(Data) % FileAlignment) != 0:
                 # Padding the data of the section.
-                Data += '\x00' * (FileAlignment - (len(Data) % FileAlignment))
+                Data += b'\x00' * (FileAlignment - (len(Data) % FileAlignment))
 
             if RawSize != len(Data):
                 if (    RawSize > len(Data)
                     and (RawSize % FileAlignment) == 0):
-                    Data += '\x00' * (RawSize - (len(Data) % RawSize))
+                    Data += b'\x00' * (RawSize - (len(Data) % RawSize))
                 else:
                     RawSize = len(Data)
 
@@ -265,7 +265,7 @@ def open_file(arg,mode):
   return file
 
 def info_section(section):
-    print(colors.ORANGE + "    Name:                      "           + section.Name)
+    print(colors.ORANGE + "    Name:                      "           + section.Name.decode())
     print("    RelativeVirtualAddress:    " + str(hex(section.VirtualAddress)))
     print("    SizeOfRawData:             "  + str(hex(section.SizeOfRawData)))
     print("    PointerToRawData:          "  + str(hex(section.PointerToRawData)))
@@ -287,7 +287,7 @@ def organize_sections(sections):
 
 def create_section(pe,shellcode,flags):
   sections = SectionDoubleP(pe)
-  sectionName = '.' + ''.join(random.choice(string.lowercase) for i in range(random.randint(1, 6)))
+  sectionName = b'.' + ''.join(random.choice(string.ascii_lowercase) for i in range(random.randint(1, 6))).encode()
   try:
     pe = sections.push_back(Characteristics=flags, Data=shellcode, Name=sectionName)
     print(colors.GREEN + "[+] New section added" + colors.RESET)
